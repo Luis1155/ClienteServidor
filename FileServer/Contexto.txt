@@ -1,0 +1,15 @@
+Servidor de archivos
+
+Casos de uso:
+- Subir
+- Bajar
+- Compartir
+
+1) Transferencia de un archivo en el modelo basico (REQ, REP)
+2) Transaferencia por segmentos
+3) Proxy
+
+192.168.60.102
+
+/////////////////////
+cliente crea archivo indice.txt
