@@ -1,17 +1,20 @@
 import pygame
 import sys
+import zmq
 from pygame.locals import *
 
 # VariablesGlobales
 ancho = 1000
 alto = 630
+Green = (0, 255, 0)
+dictJugadores = {}
 
 class Jugador(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.imagenJugador = pygame.image.load("pacman.png")
         self.rect = self.imagenJugador.get_rect()
-        
+
         self.rect.centerx = 30
         self.rect.centery = 30
         self.vida = True
@@ -19,35 +22,26 @@ class Jugador(pygame.sprite.Sprite):
         self.angulo = 0
         self.mover = True
 
+    def getPosition(self):
+        return (self.rect.centerx, self.rect.centery)
+
     def dibujarJugador(self, ventana):
         imagenRotada = pygame.transform.rotate(self.imagenJugador, self.angulo)
         ventana.blit(imagenRotada, self.rect)
-        # print("Rect de jugador: " + str(self.rect))
 
-    # def movimientoJugador(self, listaBloques):
-    #     if self.vida == True:
-    #         if self.rect.left <= 0:
-    #             self.rect.left = 0
-    #         elif self.rect.right >= ancho:
-    #             self.rect.right = ancho
-    #         elif self.rect.top <= 0:
-    #             self.rect.top = 0
-    #         elif self.rect.bottom >= alto:
-    #             self.rect.bottom = alto
-                    
 class Bloque(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.imagenBloque = pygame.image.load("muro.png")
-        self.rect = self.imagenBloque.get_rect()
+        self.image = pygame.image.load("muro.png")
+        self.rect = self.image.get_rect()
         self.rect.centerx
         self.rect.centery
 
 class Moneda(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.imagenMoneda = pygame.image.load("moneda.png")
-        self.rect = self.imagenMoneda.get_rect()
+        self.image = pygame.image.load("moneda.png")
+        self.rect = self.image.get_rect()
         self.rect.centerx
         self.rect.centery
 
@@ -56,29 +50,29 @@ class Laberinto(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.anchoMatriz = 27
         self.altoMatriz = 21
-        self.listaBloques = []
-        self.listaMonedas = []
-        self.matriz = [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                       [0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],
-                       [0,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0],
-                       [0,1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0],
-                       [0,0,1,0,1,1,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,1,1,0,1,0,0],
-                       [0,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,0],
-                       [0,1,1,1,1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,1,1,0],
-                       [0,0,0,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,0,0,0],
-                       [0,1,1,1,1,1,1,1,0,1,0,0,1,1,1,0,0,1,0,1,1,1,1,1,1,1,0],
-                       [0,1,0,1,0,1,0,0,0,1,0,1,1,0,1,1,0,1,0,0,0,1,0,1,0,1,0],
-                       [0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,0],
-                       [0,1,0,1,0,1,0,0,0,1,0,1,1,0,1,1,0,1,0,0,0,1,0,1,0,1,0],
-                       [0,1,1,1,1,1,1,1,0,1,0,0,1,1,1,0,0,1,0,1,1,1,1,1,1,1,0],
-                       [0,0,0,0,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,0,0,0,0],
-                       [0,1,1,1,1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,1,1,0],
-                       [0,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,0],
-                       [0,0,1,0,1,1,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,1,1,0,1,0,0],
-                       [0,1,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0],
-                       [0,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0],
-                       [0,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],
-                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+        self.listaBloques = pygame.sprite.Group()
+        self.listaMonedas = pygame.sprite.Group()
+        self.matriz = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+                       [0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+                       [0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+                       [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+                       [0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+                       [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
+                       [0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                       [0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+                       [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+                       [0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0],
+                       [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+                       [0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+                       [0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                       [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0],
+                       [0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+                       [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+                       [0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+                       [0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+                       [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
     def cargarLaberinto(self):
         for i in range(self.altoMatriz):
@@ -86,21 +80,38 @@ class Laberinto(pygame.sprite.Sprite):
                 if self.matriz[i][j] == 0:
                     bloque = Bloque()
                     bloque.rect.centerx, bloque.rect.centery = j*30, i*30
-                    self.listaBloques.append(bloque)
+                    self.listaBloques.add(bloque)
                 elif self.matriz[i][j] == 1:
                     moneda = Moneda()
                     moneda.rect.centerx, moneda.rect.centery = j*30, i*30
-                    self.listaMonedas.append(moneda)
+                    self.listaMonedas.add(moneda)
 
     def dibujarLaberinto(self, ventana):
-        for i in self.listaBloques:
-            ventana.blit(i.imagenBloque, i.rect)
+        self.listaBloques.draw(ventana)
     
     def dibujarMonedas(self, ventana):
-        for j in self.listaMonedas:
-            ventana.blit(j.imagenMoneda, j.rect)
+        self.listaMonedas.draw(ventana)
+
+def crearJugadores(listIdent):
+    for i in listIdent:
+        if i in dictJugadores:
+            continue
+        else:    
+            jugExterno = Jugador()
+            dictJugadores[i] = jugExterno
+    
 
 def main():
+
+    ######################Cliente
+    context = zmq.Context()
+    server = context.socket(zmq.DEALER)
+    server.connect('tcp://localhost:5000')
+    poll = zmq.Poller()
+    poll.register(server, zmq.POLLIN)
+    ######################Cliente
+    server.send_multipart([b"newPlayer"])
+    
     pygame.init()
     ventana = pygame.display.set_mode((ancho, alto), RESIZABLE)
     pygame.display.set_caption("PacmanDistribuido")
@@ -110,9 +121,12 @@ def main():
     escenario.cargarLaberinto()
     enJuego = True
     reloj = pygame.time.Clock()
+
     while True:
         reloj.tick(60)
         # pacman.movimientoJugador(escenario.listaBloques)
+        
+        w, z = pacman.getPosition()
         for even in pygame.event.get():
             if even.type == QUIT:
                 pygame.quit()
@@ -135,10 +149,9 @@ def main():
                     elif even.key == K_DOWN:
                         pacman.angulo = 270
                         pacman.rect.top += pacman.velocidad
-                elif pacman.mover == False:
+                elif even.type == KEYUP and pacman.mover == False:
                     if even.key == K_LEFT:
                         pacman.angulo = 180
-                        print(pacman.velocidad)
                         pacman.rect.left += pacman.velocidad
 
                     elif even.key == K_RIGHT:
@@ -154,23 +167,34 @@ def main():
                         pacman.rect.top -= pacman.velocidad
                     pacman.mover = True
 
-                for bloque in escenario.listaBloques:
-                    if pacman.rect.colliderect(bloque.rect):
-                        pacman.mover = False
+                #Colision con laberinto???
+                listBlock = pygame.sprite.spritecollide(pacman, escenario.listaBloques, False)
+                if listBlock:
+                    pacman.mover = False
 
+        x, y = pacman.getPosition()
+        newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
+        if (x != w) or (y != z):
+            server.send_multipart(newPos)
+                
+        # server.send_multipart([b"Jugadores"])
+        # listJuga = server.recv_multipart()
+        # print(listJuga)
+        # if(len(listJuga) != 0):
+        #     crearJugadores(listJuga)
 
         ventana.blit(fondo, (0, 0))
 
-        if len(escenario.listaMonedas) > 0:
-            for moneda in escenario.listaMonedas:
-                if pacman.rect.colliderect(moneda.rect):
-                    escenario.listaMonedas.remove(moneda)
-                    # print("Rect de moneda: " + str(moneda.rect))
+        #Colision con monedas???
+        pygame.sprite.spritecollide(pacman, escenario.listaMonedas, True)
            
-
-        escenario.dibujarMonedas(ventana)
         escenario.dibujarLaberinto(ventana)
-       
+        escenario.dibujarMonedas(ventana)
+        
+        for jug in dictJugadores:
+            aux = dictJugadores[jug]
+            aux.dibujarJugador(ventana)
+
         pacman.dibujarJugador(ventana)
         
         pygame.display.update()
