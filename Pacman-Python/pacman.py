@@ -1,22 +1,24 @@
 import pygame
 import sys
 import zmq
+import ast
+from collections import namedtuple
 from pygame.locals import *
 
 # VariablesGlobales
-ancho = 1000
+ancho = 810
 alto = 630
-Green = (0, 255, 0)
 dictJugadores = {}
+listaMonedas = pygame.sprite.Group()
 
 class Jugador(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.imagenJugador = pygame.image.load("pacman.png")
+        
         self.rect = self.imagenJugador.get_rect()
-
-        self.rect.centerx = 30
-        self.rect.centery = 30
+        self.rect.centerx
+        self.rect.centery
         self.vida = True
         self.velocidad = 15
         self.angulo = 0
@@ -51,7 +53,7 @@ class Laberinto(pygame.sprite.Sprite):
         self.anchoMatriz = 27
         self.altoMatriz = 21
         self.listaBloques = pygame.sprite.Group()
-        self.listaMonedas = pygame.sprite.Group()
+        # self.listaMonedas = pygame.sprite.Group()
         self.matriz = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                        [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
                        [0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
@@ -79,36 +81,51 @@ class Laberinto(pygame.sprite.Sprite):
             for j in range(self.anchoMatriz):
                 if self.matriz[i][j] == 0:
                     bloque = Bloque()
-                    bloque.rect.centerx, bloque.rect.centery = j*30, i*30
+                    bloque.rect.x, bloque.rect.y = (j)*30, (i)*30
                     self.listaBloques.add(bloque)
                 elif self.matriz[i][j] == 1:
                     moneda = Moneda()
-                    moneda.rect.centerx, moneda.rect.centery = j*30, i*30
-                    self.listaMonedas.add(moneda)
+                    moneda.rect.x, moneda.rect.y = 30*j+11, 30*i+11
+                    listaMonedas.add(moneda)
 
     def dibujarLaberinto(self, ventana):
         self.listaBloques.draw(ventana)
     
     def dibujarMonedas(self, ventana):
-        self.listaMonedas.draw(ventana)
+        listaMonedas.draw(ventana)
 
-def crearJugadores(listIdent):
-    for i in listIdent:
-        if i in dictJugadores:
+def crearJugadores(dictJugs, identy):
+    for i in dictJugs:
+        if i in dictJugadores or i == identy:
+            # print("Este es mi i: {}".format(i))
+            # print("Este es mi identy: {}".format(identy))
             continue
         else:    
             jugExterno = Jugador()
+            jugExterno.rect.centerx = dictJugs[i][0]
+            jugExterno.rect.centery = dictJugs[i][1]
             dictJugadores[i] = jugExterno
+    # print(dictJugadores)
     
 
 def main():
 
+    Ini = True
+
+    if len(sys.argv) != 2:
+        print("Must be called with an identity")
+        exit()
+        
+    identity = sys.argv[1].encode('ascii')
+
     ######################Cliente
     context = zmq.Context()
     server = context.socket(zmq.DEALER)
+    server.identity = identity
     server.connect('tcp://localhost:5000')
-    poll = zmq.Poller()
-    poll.register(server, zmq.POLLIN)
+    
+    poller = zmq.Poller()
+    poller.register(server, zmq.POLLIN)
     ######################Cliente
     server.send_multipart([b"newPlayer"])
     
@@ -124,7 +141,6 @@ def main():
 
     while True:
         reloj.tick(60)
-        # pacman.movimientoJugador(escenario.listaBloques)
         
         w, z = pacman.getPosition()
         for even in pygame.event.get():
@@ -173,20 +189,32 @@ def main():
                     pacman.mover = False
 
         x, y = pacman.getPosition()
-        newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
-        if (x != w) or (y != z):
-            server.send_multipart(newPos)
-                
-        # server.send_multipart([b"Jugadores"])
-        # listJuga = server.recv_multipart()
-        # print(listJuga)
-        # if(len(listJuga) != 0):
-        #     crearJugadores(listJuga)
+        # newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
+        # if (x != w) or (y != z):
+        #     server.send_multipart(newPos)
+            
+        server.send_multipart([b"Jugadores"])  
+        socks = dict(poller.poll(0))  
+        if server in socks:
+            dictJugs = server.recv_multipart()
+            # print(dictJugs)
+            # print (identity)
+            diccionarioDecodificado = ast.literal_eval(dictJugs[0].decode())
+            # print(type(diccionarioDecodificado))
+            print(diccionarioDecodificado)
+            if Ini == True:
+                posicion = diccionarioDecodificado[identity]
+                print(posicion)
+                pacman.rect.centerx = posicion[0]
+                pacman.rect.centery = posicion[1]
+                Ini = False
+            if(len(dictJugs) != 0):
+                crearJugadores(diccionarioDecodificado, identity)
 
         ventana.blit(fondo, (0, 0))
 
         #Colision con monedas???
-        pygame.sprite.spritecollide(pacman, escenario.listaMonedas, True)
+        pygame.sprite.spritecollide(pacman, listaMonedas, True)
            
         escenario.dibujarLaberinto(ventana)
         escenario.dibujarMonedas(ventana)
