@@ -95,11 +95,9 @@ class Laberinto(pygame.sprite.Sprite):
         listaMonedas.draw(ventana)
 
 def crearJugadores(dictJugs, identity):
-    print("DICTJUG {}".format(dictJugs))
+    # print("DICTJUG {}".format(dictJugs))
     for i in dictJugs:
         if i in dictJugadores or i == identity:
-            # print("Este es mi i: {}".format(i))
-            # print("Este es mi identity: {}".format(identity))
             continue
         else:    
             jugExterno = Jugador()
@@ -114,7 +112,7 @@ def actualizarPosJugadores(dicJugs, identity):
             continue
         else:
             auxJug = dictJugadores[i]
-            print("auxJugador {}".format(auxJug))
+            # print("auxJugador {}".format(auxJug))
             auxJug.rect.centerx = int(dicJugs[i][0])
             auxJug.rect.centery = int(dicJugs[i][0])
 
@@ -123,7 +121,7 @@ def main():
     Ini = True
 
     if len(sys.argv) != 2:
-        print("Must be called with an identity")
+        print("Ingresar identidad")
         exit()
         
     identity = sys.argv[1].encode('ascii')
@@ -211,10 +209,10 @@ def main():
             # print (identity)
             diccionarioDecodificado = ast.literal_eval(dictJugs[0].decode())
             # print(type(diccionarioDecodificado))
-            print(diccionarioDecodificado)
+            # print(diccionarioDecodificado)
             if Ini == True:
                 posicion = diccionarioDecodificado[identity]
-                print(posicion)
+                # print(posicion)
                 pacman.rect.centerx = int(posicion[0])
                 pacman.rect.centery = int(posicion[1])
                 Ini = False

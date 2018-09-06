@@ -7,7 +7,7 @@ from collections import namedtuple
 context = zmq.Context()
 socket = context.socket(zmq.ROUTER)
 socket.bind('tcp://*:5000')
-print("Started server")
+print("Servidor iniciado")
 
 poll = zmq.Poller()
 poll.register(socket, zmq.POLLIN)
@@ -28,8 +28,8 @@ while True:
                     dictSocket[ident] = a.pop(0)
                     listIdent.append(ident)
                 # print(ident)
-                print(listIdent)
-                print(dictSocket)
+                # print(listIdent)
+                # print(dictSocket)
                 
             if msg[0] == b"newPosition":
                 dictSocket[ident] = [msg[1].decode('ascii'), msg[2].decode('ascii')]
