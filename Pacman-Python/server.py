@@ -41,8 +41,9 @@ while True:
                 # print("Respuesta a cliente solicitando jugadores")
                 # print("Envio lista jugadores")
 
-            # if msg[0] == b"Monedas":
-
+            if msg[0] == b"actPosiciones":
+                for iden in listIdent:
+                    socket.send_multipart([iden, str(dictSocket).encode('ascii')])
             # for key in Socketdict:
             #     # print (key, ":", Socketdict[key])
             #     if ident == key:

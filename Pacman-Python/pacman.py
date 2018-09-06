@@ -94,19 +94,29 @@ class Laberinto(pygame.sprite.Sprite):
     def dibujarMonedas(self, ventana):
         listaMonedas.draw(ventana)
 
-def crearJugadores(dictJugs, identy):
+def crearJugadores(dictJugs, identity):
+    print("DICTJUG {}".format(dictJugs))
     for i in dictJugs:
-        if i in dictJugadores or i == identy:
+        if i in dictJugadores or i == identity:
             # print("Este es mi i: {}".format(i))
-            # print("Este es mi identy: {}".format(identy))
+            # print("Este es mi identity: {}".format(identity))
             continue
         else:    
             jugExterno = Jugador()
-            jugExterno.rect.centerx = dictJugs[i][0]
-            jugExterno.rect.centery = dictJugs[i][1]
+            jugExterno.rect.centerx = int(dictJugs[i][0])
+            jugExterno.rect.centery = int(dictJugs[i][1])
             dictJugadores[i] = jugExterno
     # print(dictJugadores)
-    
+
+def actualizarPosJugadores(dicJugs, identity):
+    for i in dicJugs:
+        if i == identity:
+            continue
+        else:
+            auxJug = dictJugadores[i]
+            print("auxJugador {}".format(auxJug))
+            auxJug.rect.centerx = int(dicJugs[i][0])
+            auxJug.rect.centery = int(dicJugs[i][0])
 
 def main():
 
@@ -189,9 +199,9 @@ def main():
                     pacman.mover = False
 
         x, y = pacman.getPosition()
-        # newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
-        # if (x != w) or (y != z):
-        #     server.send_multipart(newPos)
+        newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
+        if (x != w) or (y != z):
+            server.send_multipart(newPos)
             
         server.send_multipart([b"Jugadores"])  
         socks = dict(poller.poll(0))  
@@ -205,11 +215,19 @@ def main():
             if Ini == True:
                 posicion = diccionarioDecodificado[identity]
                 print(posicion)
-                pacman.rect.centerx = posicion[0]
-                pacman.rect.centery = posicion[1]
+                pacman.rect.centerx = int(posicion[0])
+                pacman.rect.centery = int(posicion[1])
                 Ini = False
             if(len(dictJugs) != 0):
                 crearJugadores(diccionarioDecodificado, identity)
+
+        # server.send_multipart([b"actPosiciones"])
+        # if server in socks:
+        #     dictJugs = server.recv_multipart()
+        #     diccionarioDecodificado = ast.literal_eval(dictJugs[0].decode())
+        #     if(len(dictJugs) != 0):
+        #         actualizarPosJugadores(diccionarioDecodificado, identity)
+
 
         ventana.blit(fondo, (0, 0))
 
