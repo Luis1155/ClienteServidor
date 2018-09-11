@@ -14,7 +14,7 @@ poll.register(socket, zmq.POLLIN)
 dictSocket = {}
 listIdent = []
 listMonedas = pygame.sprite.Group()
-a = [[60, 45], [60, 585], [750, 45], [750, 585]]
+a = [[60, 45], [60, 585], [750, 45], [750, 585], [405, 45], [405, 585]]
 
 
 while True:
@@ -27,29 +27,19 @@ while True:
                 if not(ident in dictSocket):
                     dictSocket[ident] = a.pop(0)
                     listIdent.append(ident)
-                # print(ident)
-                # print(listIdent)
-                # print(dictSocket)
-                
+                    if len(listIdent) != 0:
+                        for iden in listIdent:
+                            socket.send_multipart([iden, b"Players", str(dictSocket).encode('ascii')])
+                # print(dictSocket[ident])
+
             if msg[0] == b"newPosition":
                 dictSocket[ident] = [msg[1].decode('ascii'), msg[2].decode('ascii')]
-                print(dictSocket)
-            
-            if msg[0] == b"Jugadores":
+                print(msg)
                 for iden in listIdent:
-                    socket.send_multipart([iden, str(dictSocket).encode('ascii')])
-                # print("Respuesta a cliente solicitando jugadores")
-                # print("Envio lista jugadores")
-
-            if msg[0] == b"actPosiciones":
-                for iden in listIdent:
-                    socket.send_multipart([iden, str(dictSocket).encode('ascii')])
-            # for key in Socketdict:
-            #     # print (key, ":", Socketdict[key])
-            #     if ident == key:
-            #         continue
-            #     else:
-            #         socket.send_multipart([key, msg])
-    
-                    
+                    if ident == iden:
+                        continue
+                    else:
+                        print
+                        socket.send_multipart([iden, b"Position", ident, msg[1], msg[2], msg[3]])
+                  
                 

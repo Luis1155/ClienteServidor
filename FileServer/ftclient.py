@@ -2,7 +2,7 @@ import zmq
 import sys
 import hashlib
 
-partSize = 1024 * 1024 * 10
+partSize = 1024 * 1024 * 1
 
 def uploadFile2(filename, socket):
     with open(filename, "rb") as f:
@@ -36,24 +36,7 @@ def computeHash(bytes):
     sha1.update(bytes)
     return sha1.hexdigest()
 
-def createIndex(filename, servers):
-    with open(filename, "rb") as f:
-        completeSha1 = computeHashFile(filename) + ".txt"
-        with open(completeSha1, "w") as i:    
-            finished = False
-            part = 0
-            while not finished:
-                print("Writing part {}".format(part))
-                f.seek(part*partSize)
-                bt = f.read(partSize)
-                sha1bt = computeHash(bt)
-                i.write(sha1bt + " " + servers[part % len(servers)].decode("ascii"))
-                i.write("\n")
-                part = part + 1
-                if len(bt) < partSize:
-                    finished = True
-
-def uploadFile(context, filename, servers):
+def uploadFile(context, filename, servers, username, proxy):
     sockets = []
     for ad in servers:
         s = context.socket(zmq.REQ)
@@ -64,18 +47,33 @@ def uploadFile(context, filename, servers):
         completeSha1= bytes(computeHashFile(filename), "ascii")
         finished = False
         part = 0
+        index = open("1.txt","w+")
+        index.write(filename.decode("ascii") + "\n")
+        index.write(completeSha1.decode("ascii") + "\n")
+        auxDict = {}
+
         while not finished:
             print("Uploading part {}".format(part))
             f.seek(part*partSize)
             bt = f.read(partSize)
             sha1bt = bytes(computeHash(bt), "ascii")
+            auxDict[sha1bt] = servers[part % len(sockets)]
+            index.write(sha1bt.decode("ascii") + "\n")
             s = sockets[part % len(sockets)]
             s.send_multipart([b"upload", filename, bt, sha1bt, completeSha1])
             response = s.recv()
-            print("Received reply for part {}".format(response))
+            print("Received reply for part {} ".format(part))
             part = part + 1
             if len(bt) < partSize:
                 finished = True
+        ShaIndex = bytes(computeHash(bytes(index.read(),"ascii")), "ascii") 
+        index.close()
+        with open("1.txt", "rb") as f:
+            s = sockets[0]
+            s.send_multipart([b"upload", b"1.txt", f.read(), ShaIndex, completeSha1])
+
+        print(ShaIndex)
+        proxy.send_multipart([b"finished",bytes(str(auxDict),"ascii"), ShaIndex, servers[0], bytes(username, "ascii"), filename])
 
 def main():
     if len(sys.argv) != 4:
@@ -96,9 +94,9 @@ def main():
     if operation == "upload":
         proxy.send_multipart([b"availableServers"])
         servers = proxy.recv_multipart()
-        createIndex(filename, servers)
-        print("There are {} available servers".format)
-        uploadFile(context, filename, servers)
+        print("There are {} available servers".format(len(servers)))
+        uploadFile(context, filename, servers,username, proxy)
+        print("File {} was uploaded.".format(filename))
     elif operation == "download":
         print("Not implemented yet")
     elif operation == "share":

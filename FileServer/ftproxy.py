@@ -3,6 +3,8 @@ import zmq
 def main():
     # Address for each server to receive files
     servAddresses = []
+    dataBase = {}
+    dataBase2 = {}
 
     context = zmq.Context()
     servers = context.socket(zmq.REP)
@@ -22,7 +24,19 @@ def main():
             operation, *msg = clients.recv_multipart()
             if operation == b"availableServers":
                 clients.send_multipart(servAddresses)
-            print(msg)
+            elif operation == b"finished":
+                dictSeg = eval(msg[0])
+                ShaIn = msg[1]
+                AddressIndexSha = msg[2]
+                Owner = msg[3]
+                filename = msg[4].decode("ascii")
+                for key,value in dictSeg.items():
+                    dataBase[key] = value
+                dataBase[ShaIn] = AddressIndexSha
+                dataBase2[filename] = [ShaIn, Owner]
+                print(dataBase)
+                print()
+                print(dataBase2)
 
         if servers in socks:
             print("Message from server")

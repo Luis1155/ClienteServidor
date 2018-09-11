@@ -9,6 +9,7 @@ from pygame.locals import *
 ancho = 810
 alto = 630
 dictJugadores = {}
+listaJugadores = pygame.sprite.Group()
 listaMonedas = pygame.sprite.Group()
 
 class Jugador(pygame.sprite.Sprite):
@@ -103,18 +104,9 @@ def crearJugadores(dictJugs, identity):
             jugExterno = Jugador()
             jugExterno.rect.centerx = int(dictJugs[i][0])
             jugExterno.rect.centery = int(dictJugs[i][1])
+            listaJugadores.add(jugExterno)
             dictJugadores[i] = jugExterno
     # print(dictJugadores)
-
-def actualizarPosJugadores(dicJugs, identity):
-    for i in dicJugs:
-        if i == identity:
-            continue
-        else:
-            auxJug = dictJugadores[i]
-            # print("auxJugador {}".format(auxJug))
-            auxJug.rect.centerx = int(dicJugs[i][0])
-            auxJug.rect.centery = int(dicJugs[i][0])
 
 def main():
 
@@ -135,7 +127,6 @@ def main():
     poller = zmq.Poller()
     poller.register(server, zmq.POLLIN)
     ######################Cliente
-    server.send_multipart([b"newPlayer"])
     
     pygame.init()
     ventana = pygame.display.set_mode((ancho, alto), RESIZABLE)
@@ -147,9 +138,16 @@ def main():
     enJuego = True
     reloj = pygame.time.Clock()
 
+    server.send_multipart([b"newPlayer"])
+
     while True:
         reloj.tick(60)
         
+        if len(listaJugadores) < 1:
+            enJuego = False
+        else:
+            enJuego = True
+
         w, z = pacman.getPosition()
         for even in pygame.event.get():
             if even.type == QUIT:
@@ -197,40 +195,35 @@ def main():
                     pacman.mover = False
 
         x, y = pacman.getPosition()
-        newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii')]
+        ang = pacman.angulo
+        newPos = [b"newPosition", bytes(str(x), 'ascii'), bytes(str(y), 'ascii'), bytes(str(ang), 'ascii')]
         if (x != w) or (y != z):
             server.send_multipart(newPos)
             
-        server.send_multipart([b"Jugadores"])  
         socks = dict(poller.poll(0))  
         if server in socks:
-            dictJugs = server.recv_multipart()
-            # print(dictJugs)
-            # print (identity)
-            diccionarioDecodificado = ast.literal_eval(dictJugs[0].decode())
-            # print(type(diccionarioDecodificado))
-            # print(diccionarioDecodificado)
-            if Ini == True:
-                posicion = diccionarioDecodificado[identity]
-                # print(posicion)
-                pacman.rect.centerx = int(posicion[0])
-                pacman.rect.centery = int(posicion[1])
-                Ini = False
-            if(len(dictJugs) != 0):
-                crearJugadores(diccionarioDecodificado, identity)
-
-        # server.send_multipart([b"actPosiciones"])
-        # if server in socks:
-        #     dictJugs = server.recv_multipart()
-        #     diccionarioDecodificado = ast.literal_eval(dictJugs[0].decode())
-        #     if(len(dictJugs) != 0):
-        #         actualizarPosJugadores(diccionarioDecodificado, identity)
-
+            mesServer = server.recv_multipart()
+            if mesServer[0] == b"Players":
+                diccionarioDecodificado = ast.literal_eval(mesServer[1].decode())
+                if Ini == True:
+                    posicion = diccionarioDecodificado[identity]    
+                    print(posicion)
+                    pacman.rect.centerx = int(posicion[0])
+                    pacman.rect.centery = int(posicion[1])
+                    Ini = False
+                if(len(mesServer) != 0):
+                    crearJugadores(diccionarioDecodificado, identity)
+                    
+            if mesServer[0] == b"Position":
+                dictJugadores[mesServer[1]].angulo = int(mesServer[4].decode('ascii'))
+                dictJugadores[mesServer[1]].rect.centerx = int(mesServer[2].decode('ascii'))
+                dictJugadores[mesServer[1]].rect.centery = int(mesServer[3].decode('ascii'))
 
         ventana.blit(fondo, (0, 0))
 
         #Colision con monedas???
         pygame.sprite.spritecollide(pacman, listaMonedas, True)
+        pygame.sprite.pygame.sprite.groupcollide(listaJugadores, listaMonedas, False, True)
            
         escenario.dibujarLaberinto(ventana)
         escenario.dibujarMonedas(ventana)
