@@ -42,4 +42,3 @@ while True:
                         print
                         socket.send_multipart([iden, b"Position", ident, msg[1], msg[2], msg[3]])
                   
-                
