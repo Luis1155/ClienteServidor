@@ -2,7 +2,7 @@ import zmq
 import sys
 import hashlib
 
-partSize = 1024 * 1024 * 10
+partSize = 1024 * 1024 * 1
 
 def uploadFile2(filename, socket):
     with open(filename, "rb") as f:
