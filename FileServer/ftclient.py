@@ -153,7 +153,14 @@ def main():
         # print(servers)
         nameFile = downloadFile(context, shaIndex, dictIndex,locatIndex, servers)
         print("The {} has been downloaded". format(nameFile))
-        
+
+    elif operation == "tolist":
+        proxy.send_multipart([b"tolist", bytes(username, 'ascii')])
+        msg = proxy.recv_multipart()
+        listFiles = eval(msg[0].decode('ascii'))
+        for i in listFiles:
+            print(i)
+
     elif operation == "share":
         print("Not implemented yet")
         

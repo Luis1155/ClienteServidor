@@ -34,18 +34,26 @@ def main():
                 filename = msg[4].decode('ascii')   #nombreArchivo
                 dataParts[ShaIn] = dictSeg
                 dataIndex[ShaIn] = AddressIndexSha
-                dataOwner[filename] = [Owner]
+                if Owner in dataOwner:
+                    dataOwner[Owner].append(filename)
+                else:
+                    dataOwner[Owner] = [filename]
                 clients.send(b"Ok")
                 # print(dataParts)
                 # print("########")
                 # print(dataIndex)
-                # print("########")
-                # print(dataOwner)
+                print("########")
+                print(dataOwner)
             elif operation == b"serverIndex":
                 shaIndex = msg[0]
                 dictIndex = dataParts[shaIndex]
                 locatIndex = dataIndex[shaIndex]
                 clients.send_multipart([shaIndex, bytes(str(dictIndex),'ascii'), locatIndex, bytes(str(servAddresses), 'ascii')])
+            elif operation == b"tolist":
+                username = msg[0]
+                listFiles = dataOwner[username]
+                clients.send_multipart([bytes(str(listFiles), 'ascii')])
+
 
         if servers in socks:
             print("Message from server")
