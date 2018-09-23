@@ -47,4 +47,5 @@ A = [[0, 1, 3, g, g, g, g, g],
 #print(T)
 
 X = strange(A)
-print(X)
+for x in X:
+    print(x)
