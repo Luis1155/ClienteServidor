@@ -96,9 +96,7 @@ vector<vector<int>> strange2(vector<vector<int>>& G)
     int cont = 0;
     vector<vector<int>> A = G;
     vector<vector<int>> path;
-    
-    cout<<"condicional"<<endl;
-    
+        
     if (nodes % 2 != 0)
     {
         flag = true;
@@ -123,6 +121,25 @@ vector<vector<int>> strange2(vector<vector<int>>& G)
     return A;
 }
 
+void diameterMat(vector<vector<int>>& G)
+{
+    int max=0;
+    int x, y;
+    for(int i=0; i<G.size(); i++)
+        for(int j=0; j<G[0].size(); j++)
+        {
+            if(G[i][j] > max && G[i][j] != g)
+            {
+                max = G[i][j];
+                x = i;
+                y = j;
+            }
+        }
+
+    cout<<"Diameter: "<<max<<endl;
+    cout<<"X: "<<x<<" Y: "<<y<<endl;
+}
+
 int main()
 {
     vector<vector<int>> A;
@@ -143,22 +160,23 @@ int main()
          {g, g, g, g, g, g, g, 0}};
 
     // A = {{0, 1, 3, g, g, g, g, g, 3, 6, g},
-        //  {5, 0, 1, 8, g, g, g, g, 1, 8, g},
-        //  {g, 9, 0, g, 8, g, g, g, g, 7, g},
-        //  {g, g, g, 0, g, g, g, g, g, g, 7},
-        //  {g, g, 7, g, 0, g, 2, 7, 5, g, 2},
-        //  {g, 1, g, 4, g, 0, 7, g, g, 2, 7},
-        //  {4, g, 7, g, g, g, 0, g, 4, 8, g},
-        //  {g, g, g, g, g, 1, g, 0, g, 2, 7},
-        //  {g, g, 7, g, 5, g, 2, 7, 0, g, 2},
-        //  {g, g, 7, g, 3, g, 5, 7, g, 0, 3},
-        //  {3, 1, 3, g, g, g, g, g, 3, 6, 0}};
+    //      {5, 0, 1, 8, g, g, g, g, 1, 8, g},
+    //      {g, 9, 0, g, 8, g, g, g, g, 7, g},
+    //      {g, g, g, 0, g, g, g, g, g, g, 7},
+    //      {g, g, 7, g, 0, g, 2, 7, 5, g, 2},
+    //      {g, 1, g, 4, g, 0, 7, g, g, 2, 7},
+    //      {4, g, 7, g, g, g, 0, g, 4, 8, g},
+    //      {g, g, g, g, g, 1, g, 0, g, 2, 7},
+    //      {g, g, 7, g, 5, g, 2, 7, 0, g, 2},
+    //      {g, g, 7, g, 3, g, 5, 7, g, 0, 3},
+    //      {3, 1, 3, g, g, g, g, g, 3, 6, 0}};
  
     X = strange(A);
     printMatrix(X);
     cout<<"\n";
     X = strange2(A);
     printMatrix(X);
+    diameterMat(X);
     cout<<"\n!!!!!!!!!!!!Matriz original!!!!!!!!!!!!!!!!!"<<endl;
     printMatrix(A);
     return 0;
