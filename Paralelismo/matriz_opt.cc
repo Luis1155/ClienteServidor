@@ -5,9 +5,10 @@
 #include <utility>
 #include <string.h>
 #include <vector>
-#include <tuple>
 #include <math.h>
 #include <limits.h>
+#include <typeinfo>
+#include "timer.hh"
 
 using namespace std;
 /*
@@ -121,27 +122,59 @@ void diameterMat(vector<vector<int>>& G)
     cout<<"X: "<<x<<" Y: "<<y<<endl;
 }
 
-int main()
+void fillMatriz(vector<vector<int>>& A)
 {
+    string line;
+    int nodeI, nodeF, weigth;
+    ifstream dataRoma("romaData.txt");
+    
+    if (dataRoma.is_open())
+    {   
+        dataRoma >> line >> nodeI >> nodeF >> weigth;
+
+        for(int i=0; i<nodeF; i++)
+        {
+            vector<int> aux(nodeF, g);
+            A.push_back(aux);
+        }
+        // printMatrix(A);
+
+        while (dataRoma.good())
+        {
+            dataRoma >> line >> nodeI >> nodeF >> weigth;
+            // cout<<line<<" "<<nodeI<<" "<<nodeF<<" "<<weigth<<endl;
+            A[nodeI-1][nodeF-1] = weigth;
+        }
+        
+        // printMatrix(A);
+        dataRoma.close();
+    }
+    else
+    {
+        cout << "Unable to open file";
+    }
+    
+    for(int i=0; i<A.size(); i++)
+        A[i][i]=0;
+}
+
+int main()
+{   
     vector<vector<int>> A;
     vector<vector<int>> X;
 
-    A = {{0, 1, 3, g, g, g, g, g, 3, 6, g},
-         {5, 0, 1, 8, g, g, g, g, 1, 8, g},
-         {g, 9, 0, g, 8, g, g, g, g, 7, g},
-         {g, g, g, 0, g, g, g, g, g, g, 7},
-         {g, g, 7, g, 0, g, 2, 7, 5, g, 2},
-         {g, 1, g, 4, g, 0, 7, g, g, 2, 7},
-         {4, g, 7, g, g, g, 0, g, 4, 8, g},
-         {g, g, g, g, g, 1, g, 0, g, 2, 7},
-         {g, g, 7, g, 5, g, 2, 7, 0, g, 2},
-         {g, g, 7, g, 3, g, 5, 7, g, 0, 3},
-         {3, 1, 3, g, g, g, g, g, 3, 6, 0}};
+    Timer fill;
+    fillMatriz(A);
+    cout<<"Tiempo de fillMatriz: "<<fill.elapsed()<<endl;
 
+    Timer strg;
     strange2(A, X);
-    printMatrix(X);
+    cout<<"Tiempo de fillMatriz: "<<strg.elapsed()<<endl;
+    
+    // printMatrix(X);
     diameterMat(X);
     cout<<"\n!!!!!!!!!!!!Matriz original!!!!!!!!!!!!!!!!!"<<endl;
-    printMatrix(A);
+    // printMatrix(A);
+
     return 0;
 }
