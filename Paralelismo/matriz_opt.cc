@@ -70,30 +70,14 @@ vector<vector<int>> matrixmult(vector<vector<int>>& A, vector<vector<int>>& B)
     return C;
 }
 
-vector<vector<int>> strange(vector<vector<int>>& G)
-{
-    int nodes = G.size();
-    int cont = 0;
-    vector<vector<int>> A = G;
-
-    for (int i = 0; i < nodes; i++)
-    {
-        A = matrixmult(G, A);
-        cont++;
-    }
-    cout<<"Number of multiplications (Strange): "<<cont<<endl;
-
-    return A;
-}
-
-vector<vector<int>> strange2(vector<vector<int>>& G)
+void strange2(vector<vector<int>>& G, vector<vector<int>>& X)
 {
     bool flag = false;
     int nodes = G.size();
     int cont = 0;
-    vector<vector<int>> A = G;
-    // vector<vector<int>> path;
-        
+    X = G;
+
+
     if (nodes % 2 != 0)
     {
         flag = true;
@@ -102,20 +86,20 @@ vector<vector<int>> strange2(vector<vector<int>>& G)
 
     while (nodes != 1)
     {
-        A = matrixmult(A, A);
+        X = matrixmult(X, X);
         nodes = nodes / 2;
+        cout<<nodes<<endl;
         cont++;
     }
 
     if (flag == true)
     {
-        A = matrixmult(G, A);
+        X = matrixmult(G, X);
         cont++;
     }
 
     cout<<"Number of multiplications (Strange2): "<<cont<<endl;
 
-    return A;
 }
 
 void diameterMat(vector<vector<int>>& G)
@@ -142,36 +126,19 @@ int main()
     vector<vector<int>> A;
     vector<vector<int>> X;
 
-    // A = {{0, g, 3, g},
-    //      {g, 0, g, g},
-    //      {g, g, 0, 1},
-    //      {3, 1, g, 0}};
-         
-    A = {{0, 6, g, g, 6, g, g, g},
-         {4, 0, g, g, g, g, g, g},
-         {g, g, 0, g, 2, 9, 7, g},
-         {g, g, g, 0, g, g, g, g},
-         {g, g, 4, g, 0, g, g, g},
-         {g, g, g, g, g, 0, g, 9},
-         {g, g, g, g, 6, 2, 0, g},
-         {g, g, g, g, g, g, g, 0}};
+    A = {{0, 1, 3, g, g, g, g, g, 3, 6, g},
+         {5, 0, 1, 8, g, g, g, g, 1, 8, g},
+         {g, 9, 0, g, 8, g, g, g, g, 7, g},
+         {g, g, g, 0, g, g, g, g, g, g, 7},
+         {g, g, 7, g, 0, g, 2, 7, 5, g, 2},
+         {g, 1, g, 4, g, 0, 7, g, g, 2, 7},
+         {4, g, 7, g, g, g, 0, g, 4, 8, g},
+         {g, g, g, g, g, 1, g, 0, g, 2, 7},
+         {g, g, 7, g, 5, g, 2, 7, 0, g, 2},
+         {g, g, 7, g, 3, g, 5, 7, g, 0, 3},
+         {3, 1, 3, g, g, g, g, g, 3, 6, 0}};
 
-    // A = {{0, 1, 3, g, g, g, g, g, 3, 6, g},
-    //      {5, 0, 1, 8, g, g, g, g, 1, 8, g},
-    //      {g, 9, 0, g, 8, g, g, g, g, 7, g},
-    //      {g, g, g, 0, g, g, g, g, g, g, 7},
-    //      {g, g, 7, g, 0, g, 2, 7, 5, g, 2},
-    //      {g, 1, g, 4, g, 0, 7, g, g, 2, 7},
-    //      {4, g, 7, g, g, g, 0, g, 4, 8, g},
-    //      {g, g, g, g, g, 1, g, 0, g, 2, 7},
-    //      {g, g, 7, g, 5, g, 2, 7, 0, g, 2},
-    //      {g, g, 7, g, 3, g, 5, 7, g, 0, 3},
-    //      {3, 1, 3, g, g, g, g, g, 3, 6, 0}};
- 
-    X = strange(A);
-    printMatrix(X);
-    cout<<"\n";
-    X = strange2(A);
+    strange2(A, X);
     printMatrix(X);
     diameterMat(X);
     cout<<"\n!!!!!!!!!!!!Matriz original!!!!!!!!!!!!!!!!!"<<endl;
